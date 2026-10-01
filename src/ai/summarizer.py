@@ -47,6 +47,86 @@ def _pangu(text: str) -> str:
     return text
 
 
+_COUNTRY_FLAGS = {
+    "us": "🇺🇸",
+    "usa": "🇺🇸",
+    "united states": "🇺🇸",
+    "united states of america": "🇺🇸",
+    "america": "🇺🇸",
+    "美国": "🇺🇸",
+    "china": "🇨🇳",
+    "中国": "🇨🇳",
+    "japan": "🇯🇵",
+    "日本": "🇯🇵",
+    "uk": "🇬🇧",
+    "united kingdom": "🇬🇧",
+    "britain": "🇬🇧",
+    "england": "🇬🇧",
+    "英国": "🇬🇧",
+    "germany": "🇩🇪",
+    "德国": "🇩🇪",
+    "france": "🇫🇷",
+    "法国": "🇫🇷",
+    "south korea": "🇰🇷",
+    "korea": "🇰🇷",
+    "韩国": "🇰🇷",
+    "india": "🇮🇳",
+    "印度": "🇮🇳",
+    "russia": "🇷🇺",
+    "俄罗斯": "🇷🇺",
+    "canada": "🇨🇦",
+    "加拿大": "🇨🇦",
+    "australia": "🇦🇺",
+    "澳大利亚": "🇦🇺",
+    "singapore": "🇸🇬",
+    "新加坡": "🇸🇬",
+    "israel": "🇮🇱",
+    "以色列": "🇮🇱",
+    "netherlands": "🇳🇱",
+    "荷兰": "🇳🇱",
+    "eu": "🇪🇺",
+    "european union": "🇪🇺",
+    "欧盟": "🇪🇺",
+    "switzerland": "🇨🇭",
+    "瑞士": "🇨🇭",
+    "sweden": "🇸🇪",
+    "瑞典": "🇸🇪",
+    "italy": "🇮🇹",
+    "意大利": "🇮🇹",
+    "spain": "🇪🇸",
+    "西班牙": "🇪🇸",
+    "brazil": "🇧🇷",
+    "巴西": "🇧🇷",
+    "indonesia": "🇮🇩",
+    "印尼": "🇮🇩",
+    "vietnam": "🇻🇳",
+    "越南": "🇻🇳",
+    "mexico": "🇲🇽",
+    "墨西哥": "🇲🇽",
+    "uae": "🇦🇪",
+    "saudi arabia": "🇸🇦",
+    "沙特": "🇸🇦",
+    "global": "🌍",
+    "international": "🌍",
+    "全球": "🌍",
+    "国际": "🌍",
+}
+
+
+def _country_badge(country: Optional[str]) -> str:
+    """Render a country/region as a flag emoji badge (empty string if unknown)."""
+    if not country:
+        return ""
+    key = country.strip().lower()
+    if not key:
+        return ""
+    flag = _COUNTRY_FLAGS.get(key)
+    if flag:
+        return flag
+    # Unknown country/region: show the raw name with a globe marker
+    return f"🌍 {country.strip()}"
+
+
 LABELS = {
     "en": {
         "header": "Horizon Daily",
@@ -250,9 +330,16 @@ class DailySummarizer:
                 title = _escape_markdown(view_item.title)
                 if language == "zh":
                     title = _pangu(title)
+                analysis = (
+                    view_item.item.processing.analysis
+                    if view_item.item.processing
+                    else None
+                )
+                badge = _country_badge(analysis.country if analysis else None)
+                badge_part = f"{badge} " if badge else ""
                 toc_entries.append(
                     f"{view_item.index}. [{title}](#{view_item.anchor_id}) "
-                    f"\u2b50\ufe0f {view_item.score}/10"
+                    f"{badge_part}\u2b50\ufe0f {view_item.score}/10"
                 )
             toc_sections.append("\n".join(toc_entries))
             body_sections.append(f"## {profile_name}\n\n")
@@ -311,9 +398,16 @@ class DailySummarizer:
                     title = _pangu(title)
                 url = _safe_url(view_item.item.url)
                 title_link = f"[{title}]({url})" if url else title
+                analysis = (
+                    view_item.item.processing.analysis
+                    if view_item.item.processing
+                    else None
+                )
+                badge = _country_badge(analysis.country if analysis else None)
+                badge_part = f"{badge} " if badge else ""
                 entries.append(
                     f"{view_item.index}. {title_link} "
-                    f"\u2b50\ufe0f {view_item.score}/10"
+                    f"{badge_part}\u2b50\ufe0f {view_item.score}/10"
                 )
             sections.append("\n".join(entries))
 
@@ -371,6 +465,8 @@ class DailySummarizer:
             if analysis and analysis.score is not None
             else "?"
         )
+        badge = _country_badge(analysis.country if analysis else None)
+        badge_part = f"{badge} " if badge else ""
         meta = item.metadata
 
         summary = analysis.summary if not artifact and analysis else ""
@@ -420,7 +516,7 @@ class DailySummarizer:
 
         lines = [
             f'<a id="{anchor_id or f"item-{index}"}"></a>',
-            f"{'#' * heading_level} {title_link} \u2b50\ufe0f {score}/10",  # ⭐️
+            f"{'#' * heading_level} {title_link} {badge_part}\u2b50\ufe0f {score}/10",  # ⭐️
         ]
         if summary.strip():
             lines.extend(["", summary])

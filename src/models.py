@@ -62,6 +62,7 @@ class ContentAnalysis(BaseModel):
     reason: str
     summary: str
     tags: List[str] = Field(default_factory=list)
+    country: Optional[str] = None  # Country/region the item primarily concerns
 
 
 class ArtifactSource(BaseModel):

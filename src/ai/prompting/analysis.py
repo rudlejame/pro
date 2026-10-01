@@ -9,6 +9,7 @@ ANALYSIS_RULES = f"""You are a content curator evaluating an item under the supp
 - {UNTRUSTED_INPUT_RULE}
 - Base the analysis only on the supplied item and its metadata.
 {EVIDENCE_RULES}
+- Determine the country/region the item primarily concerns: where the subject company, institution, event, or policy is based or takes effect. Use the common short English name (e.g. "US", "China", "Japan", "UK", "Germany", "EU"). Use "Global" only when no single country/region dominates (e.g. multi-country consortium news).
 - Apply the profile's evaluation policy consistently."""
 
 
@@ -26,7 +27,8 @@ Return valid JSON only:
   "score": <number from 0 to 10>,
   "reason": "<concise explanation>",
   "summary": "<one-sentence summary>",
-  "tags": ["<tag>", "..."]
+  "tags": ["<tag>", "..."],
+  "country": "<country/region name, e.g. US, China, Global>"
 }}"""
 
 
